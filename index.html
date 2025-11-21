@@ -18,17 +18,23 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            /* แก้ไข 1: เปลี่ยนจาก overflow: hidden เป็น auto เพื่อให้เลื่อนจอได้ */
+            overflow-y: auto; 
+            overflow-x: hidden; /* ซ่อนแค่แนวนอน */
+            padding: 2rem 1rem; /* เพิ่มขอบกันชิดจอในมือถือ */
         }
+        
         .portal-container {
             text-align: center;
             z-index: 10;
             animation: fadeIn 0.8s ease-out;
-            /* เพิ่ม Flex เพื่อจัดกลาง */
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+            max-width: 1200px;
         }
+
         .portal-header {
             margin-bottom: 3rem;
             display: flex;
@@ -36,19 +42,31 @@
             align-items: center; 
             justify-content: center;
         }
+
+        .portal-header img {
+            height: 80px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
         .portal-header h1 {
             font-size: 2.5rem;
             color: var(--primary-dark);
             margin-bottom: 0.5rem;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            line-height: 1.2;
         }
+
         .portal-header p { color: var(--text-muted); font-size: 1.1rem; }
+
         .card-wrapper {
             display: flex;
             gap: 2rem;
             justify-content: center;
             flex-wrap: wrap;
+            padding-bottom: 2rem; /* เผื่อพื้นที่ด้านล่างเวลาเลื่อน */
         }
+
         .role-card {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
@@ -67,11 +85,13 @@
             position: relative;
             overflow: hidden;
         }
+
         .role-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
             border-color: var(--primary);
         }
+
         .role-card i {
             font-size: 3.5rem;
             margin-bottom: 1.5rem;
@@ -79,13 +99,45 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .role-card h3 { font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--primary-dark); }
         .role-card span { font-size: 0.9rem; color: var(--text-muted); }
+        
         .role-card::after {
             content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
             background: var(--gold-gradient); transform: scaleX(0); transition: transform 0.3s ease;
         }
         .role-card:hover::after { transform: scaleX(1); }
+
+        /* --- แก้ไข 2: เพิ่ม Media Query สำหรับมือถือ --- */
+        @media (max-width: 768px) {
+            body {
+                justify-content: flex-start; /* ให้เริ่มจากด้านบน */
+                padding-top: 4rem; /* เว้นระยะหัว */
+            }
+            .portal-header img { height: 60px; margin-bottom: 1rem; }
+            .portal-header h1 { font-size: 1.8rem; }
+            .portal-header p { font-size: 0.9rem; }
+            
+            .card-wrapper {
+                flex-direction: column; /* เรียงลงแนวนอน */
+                gap: 1.5rem;
+            }
+            
+            .role-card {
+                width: 100%; /* เต็มจอ */
+                max-width: 320px; /* แต่ไม่เกิน 320px */
+                padding: 2rem; /* ลด padding */
+                display: flex;
+                flex-direction: row; /* จัด icon กับ text แนวนอน */
+                align-items: center;
+                text-align: left;
+                gap: 1.5rem;
+            }
+            
+            .role-card i { margin-bottom: 0; font-size: 2.5rem; }
+            .role-card div { display: flex; flex-direction: column; } /* wrapper สำหรับ text */
+        }
     </style>
 </head>
 <body>
@@ -97,8 +149,7 @@
 
     <div class="portal-container">
         <div class="portal-header">
-            <img src="cpf-logo.png" alt="CPF Logo" style="height: 80px; margin-bottom: 1.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-            
+            <img src="cpf-logo.png" alt="CPF Logo">
             <h1>ระบบจัดการโครงการก่อสร้าง</h1>
             <p>CPF Construction Project Management System</p>
         </div>
@@ -106,17 +157,23 @@
         <div class="card-wrapper">
             <div onclick="checkInternalAccess()" class="role-card">
                 <i class="fas fa-user-shield"></i>
-                <h3>เจ้าหน้าที่ภายใน</h3>
-                <span>(Internal Staff / Admin)</span>
+                <div>
+                    <h3>เจ้าหน้าที่ภายใน</h3>
+                    <span>(Internal Staff / Admin)</span>
+                </div>
             </div>
 
             <a href="portfolio.html" class="role-card">
                 <i class="fas fa-search-location"></i>
-                <h3>บุคคลภายนอก</h3>
-                <span>(Guest / Search Engine)</span>
+                <div>
+                    <h3>บุคคลภายนอก</h3>
+                    <span>(Guest / Search Engine)</span>
+                </div>
             </a>
         </div>
-    </div> <script>
+    </div>
+
+    <script>
         // ฟังก์ชันตรวจสอบรหัสผ่าน
         async function checkInternalAccess() {
             const { value: password } = await Swal.fire({
