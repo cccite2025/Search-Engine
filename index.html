@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CPF Construction System Portal</title>
+    <link rel="icon" href="cpf-logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -23,8 +24,18 @@
             text-align: center;
             z-index: 10;
             animation: fadeIn 0.8s ease-out;
+            /* เพิ่ม Flex เพื่อจัดกลาง */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .portal-header { margin-bottom: 3rem; }
+        .portal-header {
+            margin-bottom: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+        }
         .portal-header h1 {
             font-size: 2.5rem;
             color: var(--primary-dark);
@@ -86,6 +97,8 @@
 
     <div class="portal-container">
         <div class="portal-header">
+            <img src="cpf-logo.png" alt="CPF Logo" style="height: 80px; margin-bottom: 1.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+            
             <h1>ระบบจัดการโครงการก่อสร้าง</h1>
             <p>CPF Construction Project Management System</p>
         </div>
@@ -103,9 +116,7 @@
                 <span>(Guest / Search Engine)</span>
             </a>
         </div>
-    </div>
-
-    <script>
+    </div> <script>
         // ฟังก์ชันตรวจสอบรหัสผ่าน
         async function checkInternalAccess() {
             const { value: password } = await Swal.fire({

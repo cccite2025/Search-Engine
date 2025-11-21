@@ -1,20 +1,34 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบจัดการโครงการ - CPF (v2.3)</title>
     
+    <link rel="icon" href="cpf-logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Force Fix: ดันเนื้อหาให้ลอยเหนือพื้นหลัง */
+        header, main, .header-controls, .form-container, .table-container {
+            position: relative !important;
+            z-index: 50 !important;
+        }
+        #particleCanvas, .hybrid-bg, .blob, .watermark {
+            z-index: -10 !important;
+            pointer-events: none !important;
+        }
+        #loading { z-index: 9999; }
+    </style>
 </head>
 <body>
     <canvas id="particleCanvas"></canvas>
@@ -22,18 +36,25 @@
     <div class="hybrid-bg">
         <div class="blob blob-gold"></div>
         <div class="blob blob-green"></div>
-        <div class="watermark">CPF</div>
+        <div class="watermark">
+            <img src="cpf-logo.png" style="width: 100%; opacity: 0.4;"> 
+        </div>
     </div>
     
     <header>
-    <div>
-        <h1>ระบบจัดการโครงการ</h1>
-        <p>Construction Project Dashboard — CPF (v2.3)</p>
-    </div>
-    <a href="index.html" class="btn btn-gray" style="text-decoration:none; font-size:0.9rem;">
-        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
-    </a>
-</header>
+        <div>
+            <h1 style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                <img src="cpf-logo.png" alt="CPF Logo" style="height: 30px; width: auto;">
+                ระบบจัดการโครงการ
+            </h1>
+            <p style="color: #64748b; font-size: 0.85rem; margin-top: 0; padding-left: 4px;">
+                Construction Project Dashboard — CPF (v2.3)
+            </p>
+        </div>
+        <a href="index.html" class="btn btn-gray" style="text-decoration:none; font-size:0.9rem;">
+            <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+        </a>
+    </header>
 
     <main>
         <div id="error" class="error" style="display:none;"></div>
@@ -52,10 +73,9 @@
             </div>
             
             <div id="addBtnContainer">
-
-<button class="btn btn-gold" onclick="window.App.toggleForm()" id="addBtn">
-    <i class="fas fa-plus"></i> เพิ่มโครงการใหม่
-</button>
+                <button class="btn btn-gold" onclick="window.App.toggleForm()" id="addBtn">
+                    <i class="fas fa-plus"></i> เพิ่มโครงการใหม่
+                </button>
             </div>
         </div>
 
@@ -65,11 +85,8 @@
             
             <div style="display:flex; gap:0.75rem; margin-top:2rem;">
                 <button id="forwardBtn" class="btn btn-gold" onclick="window.App.forwardProject()" style="flex:1; display:none;">บันทึกและส่งต่อ</button>
-                
                 <button id="completeBtn" class="btn btn-gold" onclick="window.App.completeProject()" style="flex:1; display:none;">เสร็จสิ้นโครงการ</button>
-                
                 <button id="saveBtn" class="btn btn-simple-action" onclick="window.App.saveProject()" style="flex:1;">บันทึก (ยังไม่ส่ง)</button>
-                
                 <button class="btn btn-gray" onclick="window.App.toggleForm(null, true)" style="flex:1;">ยกเลิก</button>
             </div>
         </div>
@@ -87,8 +104,20 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script type="module" src="app.js"></script>
     
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loading');
+                if (loader) {
+                    loader.style.display = 'none';
+                    loader.style.pointerEvents = 'none';
+                    loader.style.zIndex = '-9999';
+                    console.log('Safety Cut: Force removed loading screen.');
+                }
+            }, 1500);
+        });
+    </script>
 </body>
 </html>

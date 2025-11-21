@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบค้นหาโครงการ - CPF Portfolio</title>
+    
+    <link rel="icon" href="cpf-logo.png" type="image/png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,14 +24,15 @@
     <main style="max-width: 800px; margin-top: 4rem;">
         
         <div style="text-align: center; margin-bottom: 3rem;">
-            <h1 style="justify-content: center; font-size: 2rem; margin-bottom: 0.5rem;">
+            <h1 style="display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-dark);">
+                <img src="cpf-logo.png" alt="CPF Logo" style="height: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                 ค้นหาโครงการ
             </h1>
-            <p style="color: var(--text-muted);">CPF Construction Portfolio</p>
+            <p style="color: var(--text-muted); font-weight: 500;">CPF Construction Portfolio</p>
         </div>
 
-        <div class="search-container" style="margin-bottom: 2rem;">
-            <input type="text" id="searchInput" placeholder="พิมพ์ชื่อโครงการเพื่อค้นหา..." autocomplete="off" style="width: 100%; max-width: 500px;">
+        <div class="search-container" style="margin-bottom: 2rem; justify-content: center; display: flex; gap: 10px;">
+            <input type="text" id="searchInput" placeholder="พิมพ์ชื่อโครงการเพื่อค้นหา..." autocomplete="off" style="width: 100%; max-width: 500px; padding: 12px 20px; border-radius: 50px; border: 1px solid #ccc; box-shadow: var(--shadow-sm);">
             <button id="searchBtn" class="btn btn-gold">
                 <i class="fas fa-search"></i> ค้นหา
             </button>
@@ -39,15 +44,21 @@
             </a>
         </div>
 
-        <div id="status" style="text-align:center; color:var(--text-muted); display:none;">กำลังค้นหา...</div>
-        <div class="results" id="results"></div>
-        <p id="noResults" style="text-align:center; color:#be123c; display:none;">ไม่พบข้อมูลโครงการ</p>
+        <div id="status" style="text-align:center; color:var(--text-muted); display:none; margin-top: 20px;">
+            <i class="fas fa-spinner fa-spin"></i> กำลังค้นหา...
+        </div>
+        
+        <div class="results" id="results" style="margin-top: 20px;"></div>
+        
+        <p id="noResults" style="text-align:center; color:#be123c; display:none; margin-top: 20px; font-weight: 600;">
+            <i class="fas fa-exclamation-circle"></i> ไม่พบข้อมูลโครงการ
+        </p>
 
         <div id="details-view" style="display:none;">
             <div class="form-container" style="animation: slideUp 0.5s ease;">
-                <h2 id="detail-title" style="text-align:center;">รายละเอียดโครงการ</h2>
+                <h2 id="detail-title" style="text-align:center; margin-bottom: 1.5rem; color: var(--primary-dark);">รายละเอียดโครงการ</h2>
                 
-                <div id="loading-detail" style="text-align:center; color:var(--text-muted); margin:2rem;">
+                <div id="loading-detail" style="text-align:center; color:var(--text-muted); margin:3rem;">
                     <div class="loading" style="position:relative; background:none; height:auto;"></div>
                     <p style="margin-top:1rem;">กำลังโหลดข้อมูล...</p>
                 </div>
@@ -83,13 +94,11 @@
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // ... (Logic เดิมทั้งหมด แต่ปรับ HTML render ให้ใช้ Class ใหม่) ...
-        
         let currentView = 'search';
         let lastSearchResults = [];
         let viewingProjectId = null;
 
-        // Labels
+        // Labels (ตัดข้อมูลความลับออก)
         const fieldLabels = {
             location: 'สถานที่',
             projectManager: 'ผู้บริหารโครงการ', 
@@ -111,21 +120,33 @@
             const searchBox = document.querySelector('.search-container');
             const resultsBox = document.getElementById('results');
             const detailsBox = document.getElementById('details-view');
-            const headerText = document.querySelector('h1');
             const backBtn = document.querySelector('.btn-gray');
+            const statusEl = document.getElementById("status");
+            const noResultsEl = document.getElementById("noResults");
 
             if (currentView === 'search') {
+                // แสดงหน้าค้นหา
                 searchBox.style.display = 'flex';
                 resultsBox.style.display = 'block';
                 detailsBox.style.display = 'none';
-                backBtn.style.display = 'inline-flex';
-                // Restore results
-                if (lastSearchResults.length > 0) displayResults(lastSearchResults);
+                if(backBtn) backBtn.style.display = 'inline-flex';
+                
+                // Restore results if any
+                if (lastSearchResults.length > 0) {
+                    displayResults(lastSearchResults);
+                } else {
+                    resultsBox.innerHTML = '';
+                }
+                statusEl.style.display = 'none';
+                noResultsEl.style.display = 'none';
             } else {
+                // แสดงหน้ารายละเอียด
                 searchBox.style.display = 'none';
                 resultsBox.style.display = 'none';
                 detailsBox.style.display = 'block';
-                backBtn.style.display = 'none';
+                if(backBtn) backBtn.style.display = 'none';
+                statusEl.style.display = 'none';
+                noResultsEl.style.display = 'none';
                 fetchProjectDetails(viewingProjectId);
             }
         }
@@ -153,6 +174,7 @@
                 if (error) throw error;
                 
                 lastSearchResults = data || [];
+                
                 if (lastSearchResults.length > 0) {
                     displayResults(lastSearchResults);
                 } else {
@@ -160,6 +182,7 @@
                 }
             } catch (error) {
                 console.error(error);
+                statusEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
             } finally {
                 statusEl.style.display = 'none';
             }
@@ -173,7 +196,7 @@
                 
                 // ใช้ Class .result-card ที่เพิ่มใน style.css
                 const card = document.createElement('div');
-                card.className = 'result-card';
+                card.className = 'result-card'; // class นี้ต้องมีใน style.css
                 card.onclick = () => setView('details', project.id);
                 card.innerHTML = `
                     <div style="display:flex; align-items:center;">
@@ -190,6 +213,13 @@
         }
 
         async function fetchProjectDetails(id) {
+            const loadingEl = document.getElementById('loading-detail');
+            const contentEl = document.getElementById('detail-content');
+            
+            // Reset view
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+
             try {
                 const { data, error } = await supabase
                     .from(TABLE_NAME)
@@ -201,12 +231,13 @@
                 if (data) renderProjectData(data);
             } catch (error) {
                 console.error(error);
+                loadingEl.innerHTML = `<p style="color:red">ไม่สามารถโหลดข้อมูลได้</p>`;
             }
         }
 
         function renderProjectData(project) {
-            const contentEl = document.getElementById('detail-content');
             const loadingEl = document.getElementById('loading-detail');
+            const contentEl = document.getElementById('detail-content');
             const titleEl = document.getElementById('detail-title');
             const tableBodyEl = document.querySelector('#details-table tbody');
             const imageContainer = document.getElementById('project-image-container');
@@ -224,7 +255,7 @@
             // 3D Button (Styled)
             if (project.ifcModel) {
                 viewerContainer.innerHTML = `
-                    <button class="btn btn-gold" style="width:100%; justify-content:center; padding:1rem;" onclick="window.open('ifc_viewer.html?modelUrl=${encodeURIComponent(project.ifcModel)}&projectName=${encodeURIComponent(project.projectName)}', '_blank')">
+                    <button class="btn btn-gold" style="width:100%; justify-content:center; padding:1rem; font-size: 1.1rem;" onclick="window.open('ifc_viewer.html?modelUrl=${encodeURIComponent(project.ifcModel)}&projectName=${encodeURIComponent(project.projectName)}', '_blank')">
                         <i class="fas fa-cube fa-lg"></i> เปิดโมเดล 3 มิติ (3D Viewer)
                     </button>
                 `;
@@ -245,13 +276,15 @@
                 if (value) {
                     let displayValue = value;
                     if (key === 'asBuiltPDF') {
-                        displayValue = `<a href="${value}" target="_blank" class="btn-view-file" style="text-decoration:none;"><i class="fas fa-file-pdf"></i> ดาวน์โหลดไฟล์</a>`;
+                        displayValue = `<a href="${value}" target="_blank" class="btn-view-file" style="text-decoration:none; color: var(--primary);"><i class="fas fa-file-pdf"></i> ดาวน์โหลดไฟล์</a>`;
                     } else if (key.includes('Date')) {
-                        try { displayValue = new Date(value).toLocaleDateString('th-TH'); } catch(e){}
+                        try { displayValue = new Date(value).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }); } catch(e){}
+                    } else if (key === 'actualDuration') {
+                        displayValue = `${value} วัน`;
                     }
                     
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td style="width:40%; color:var(--text-muted); font-weight:600;">${fieldLabels[key]}</td><td>${displayValue}</td>`;
+                    tr.innerHTML = `<td style="width:40%; color:var(--text-muted); font-weight:600;">${fieldLabels[key] || key}</td><td>${displayValue}</td>`;
                     tableBodyEl.appendChild(tr);
                 }
             });
@@ -265,7 +298,7 @@
         document.getElementById("searchInput").addEventListener("keypress", e => { if (e.key === "Enter") searchProjectsPublic(); });
         window.setView = setView;
 
-        // Particle Script (Copy จากหน้า Admin มาเพื่อให้พื้นหลังขยับได้เหมือนกัน)
+        // Particle Script
         (function() {
             const canvas = document.getElementById('particleCanvas');
             const ctx = canvas.getContext('2d');

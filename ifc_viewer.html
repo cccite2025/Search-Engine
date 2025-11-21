@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IFC Model Viewer (Demo)</title>
+    <link rel="icon" href="cpf-logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -169,13 +170,13 @@
         const axisBtns = document.querySelectorAll('.axis-btn');
         const projectNameEl = document.getElementById('project-name');
 
-        // รับชื่อโปรเจกต์จาก URL มาแสดง
+        // URL Params
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('projectName')) {
             projectNameEl.textContent = urlParams.get('projectName');
         }
 
-        // --- 3D Scene Variables (เหมือนเดิมเป๊ะ) ---
+        // --- 3D Variables ---
         let scene, camera, renderer, controls;
         let clippingPlanes;
         let activeAxis = 'Y';
@@ -186,14 +187,18 @@
             Z: { min: -4, max: 4, normal: new THREE.Vector3(0, 0, -1) }
         };
 
+        // ⭐️ [NEW] ตัวแปรสำหรับจัดการการหมุนอัตโนมัติ
+        let isAutoRotating = true;
+        let idleTimer = null;
+        const IDLE_TIME = 30000; // 30 วินาที (หน่วยมิลลิวินาที)
+
         function initScene() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f2f5); // ปรับสีพื้นหลังให้เข้ากับ Theme
+            scene.background = new THREE.Color(0xf0f2f5);
 
             camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
             camera.position.set(20, 20, 20);
 
-            // --- Clipping Plane Setup ---
             clippingPlanes = [
                 new THREE.Plane(MODEL_BOUNDS.X.normal, FAR_AWAY),
                 new THREE.Plane(MODEL_BOUNDS.Y.normal, MODEL_BOUNDS.Y.max),
@@ -213,19 +218,42 @@
             controls.target.set(0, 5, 0);
             controls.update();
 
-            // --- Lighting ---
+            // แสง
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(10, 20, 5);
             scene.add(directionalLight);
-            
-            // Grid & Helper
-            const grid = new THREE.GridHelper(100, 20, 0xcbd5e1, 0xe2e8f0); // ปรับสี Grid ให้จางลง
+            const grid = new THREE.GridHelper(100, 20, 0xcbd5e1, 0xe2e8f0);
             scene.add(grid);
             
+            // ⭐️ [NEW] เริ่มจับการกระทำของผู้ใช้ (คลิก/หมุน/แตะ)
+            setupUserInteractionListeners();
+
             animate();
             window.addEventListener('resize', onWindowResize);
+        }
+
+        // ⭐️ [NEW] ฟังก์ชันจัดการ Timer 30 วินาที
+        function setupUserInteractionListeners() {
+            const resetTimer = () => {
+                // 1. หยุดหมุนทันทีที่มีการขยับ
+                isAutoRotating = false;
+                
+                // 2. ล้าง Timer เก่าทิ้ง (ถ้ามี)
+                if (idleTimer) clearTimeout(idleTimer);
+
+                // 3. ตั้ง Timer ใหม่ 30 วินาที -> ถ้าครบเวลาให้กลับมาหมุน
+                idleTimer = setTimeout(() => {
+                    isAutoRotating = true;
+                }, IDLE_TIME);
+            };
+
+            // ดักจับ event ต่างๆ (คลิกเม้าส์, หมุนลูกกลิ้ง, ทัชสกรีน)
+            window.addEventListener('pointerdown', resetTimer); // คลิก
+            window.addEventListener('wheel', resetTimer);       // ลูกกลิ้ง
+            window.addEventListener('touchstart', resetTimer);  // จิ้มจอ
+            window.addEventListener('keydown', resetTimer);     // กดคีย์บอร์ด
         }
         
         function onWindowResize() {
@@ -236,11 +264,16 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            
+            // ⭐️ [NEW] หมุนเฉพาะตอน isAutoRotating เป็น true และไม่ได้เปิด Section
+            if (isAutoRotating && !renderer.localClippingEnabled) {
+                scene.rotation.y += 0.002; // ความเร็วการหมุน
+            }
+
             controls.update();
             renderer.render(scene, camera);
         }
 
-        // --- Create Dummy Model (Logic เดิมของคุณ) ---
         function createTestModel() {
             statusText.textContent = 'กำลังสร้างโมเดลจำลอง...';
             progressBar.style.width = '60%';
@@ -248,21 +281,21 @@
             const group = new THREE.Group();
             const clippingProperties = { clippingPlanes: clippingPlanes, side: THREE.DoubleSide };
 
-            // ตึก (ใช้สี Theme Admin)
-            const buildingMat = new THREE.MeshLambertMaterial({ color: 0x10b981, ...clippingProperties }); // สีเขียว Primary
+            // Building
+            const buildingMat = new THREE.MeshLambertMaterial({ color: 0x10b981, ...clippingProperties });
             const building = new THREE.Mesh(new THREE.BoxGeometry(10, 15, 8), buildingMat);
             building.position.y = 7.5;
             group.add(building);
 
-            // หลังคา (ใช้สีทอง Theme Admin)
-            const roofMat = new THREE.MeshLambertMaterial({ color: 0xd97706, ...clippingProperties }); // สีทอง Gold Main
+            // Roof
+            const roofMat = new THREE.MeshLambertMaterial({ color: 0xd97706, ...clippingProperties });
             const roof = new THREE.Mesh(new THREE.CylinderGeometry(0, 8, 5, 4), roofMat);
             roof.position.y = 15 + 2.5;
             roof.rotation.y = Math.PI / 4;
             group.add(roof);
 
-            // หน้าต่าง
-            const windowMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, ...clippingProperties }); // สีฟ้าอ่อน
+            // Windows
+            const windowMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, ...clippingProperties });
             const windowGeom = new THREE.BoxGeometry(2, 2, 0.2);
             [ {x: -2.5, y: 10, z: 4.1}, {x: 2.5, y: 10, z: 4.1}, {x: -2.5, y: 5, z: 4.1}, {x: 2.5, y: 5, z: 4.1} ].forEach(pos => {
                 const windowMesh = new THREE.Mesh(windowGeom, windowMat);
@@ -270,15 +303,14 @@
                 group.add(windowMesh);
             });
 
-            // ประตู
-            const doorMat = new THREE.MeshBasicMaterial({ color: 0x78350f, ...clippingProperties }); // สีน้ำตาลเข้ม
+            // Door
+            const doorMat = new THREE.MeshBasicMaterial({ color: 0x78350f, ...clippingProperties });
             const door = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 0.2), doorMat);
             door.position.set(0, 2, 4.1);
             group.add(door);
 
             scene.add(group);
             
-            // Loading Finish Animation
             progressBar.style.width = '100%';
             statusText.textContent = 'พร้อมใช้งาน!';
             setTimeout(() => {
@@ -286,6 +318,68 @@
                 loadingDiv.addEventListener('transitionend', () => loadingDiv.style.display = 'none');
             }, 500);
         }
+
+        // --- UI Event Listeners ---
+        toggleBtn.addEventListener('click', () => {
+            const willBeActive = !renderer.localClippingEnabled;
+            renderer.localClippingEnabled = willBeActive;
+            
+            // ⭐️ ถ้าเปิด Section ให้หยุดหมุนทันที
+            if (willBeActive) isAutoRotating = false;
+            else isAutoRotating = true; // ปิด Section ให้หมุนต่อ
+
+            toggleBtn.innerHTML = willBeActive ? '<i class="fas fa-times"></i> ปิด Section' : '<i class="fas fa-cut"></i> เปิด Section';
+            if(willBeActive) {
+                toggleBtn.style.background = '#f1f5f9';
+                toggleBtn.style.color = '#64748b';
+            } else {
+                toggleBtn.style.background = ''; 
+                toggleBtn.style.color = '';
+            }
+            sectionControls.style.display = willBeActive ? 'block' : 'none';
+
+            if (!willBeActive) {
+                clippingPlanes.forEach(p => p.constant = FAR_AWAY);
+            } else {
+                const bounds = MODEL_BOUNDS[activeAxis];
+                const planeIndex = ['X', 'Y', 'Z'].indexOf(activeAxis);
+                clippingPlanes[planeIndex].constant = bounds.max;
+                sectionSlider.value = bounds.max;
+                sectionSlider.dispatchEvent(new Event('input'));
+            }
+        });
+        
+        axisBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                axisBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                clippingPlanes.forEach(p => p.constant = FAR_AWAY);
+                activeAxis = btn.dataset.axis;
+                const bounds = MODEL_BOUNDS[activeAxis];
+                const planeIndex = ['X', 'Y', 'Z'].indexOf(activeAxis);
+                sliderLabel.textContent = `ระดับการตัด (${activeAxis})`;
+                sectionSlider.min = bounds.min;
+                sectionSlider.max = bounds.max;
+                sectionSlider.value = bounds.max;
+                clippingPlanes[planeIndex].constant = bounds.max;
+                sliderValue.textContent = `${bounds.max.toFixed(1)} m`;
+            });
+        });
+
+        sectionSlider.addEventListener('input', (event) => {
+            const newValue = parseFloat(event.target.value);
+            const planeIndex = ['X', 'Y', 'Z'].indexOf(activeAxis);
+            clippingPlanes[planeIndex].constant = newValue;
+            sliderValue.textContent = `${newValue.toFixed(1)} m`;
+        });
+
+        // Init
+        progressBar.style.width = '30%';
+        setTimeout(() => {
+            initScene();
+            createTestModel();
+        }, 500);
+    </script>
 
         // --- Event Listeners (Logic เดิม) ---
         toggleBtn.addEventListener('click', () => {
